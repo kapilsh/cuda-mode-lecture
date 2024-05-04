@@ -1,0 +1,7 @@
+data/sample_criteo_data.parquet filter=lfs diff=lfs merge=lfs -text
+data/sample_criteo_metadata.json filter=lfs diff=lfs merge=lfs -text
+data/dlrm_criteo_model.pt filter=lfs diff=lfs merge=lfs -text
+data/dlrm.onnx filter=lfs diff=lfs merge=lfs -text
+./data/sample_* filter=lfs diff=lfs merge=lfs -text
+.data/dlrm_criteo_model.pt filter=lfs diff=lfs merge=lfs -text
+.data/*.onnx filter=lfs diff=lfs merge=lfs -text
