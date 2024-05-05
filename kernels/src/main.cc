@@ -7,17 +7,16 @@
 
 int main()
 {
-    std::vector<int64_t> sizes = {2, 3};
+    torch::manual_seed(0);
+    std::vector<int64_t> sizes = {8, 10};
     auto x = torch::randn(sizes, torch::kCUDA);
+    auto bias = torch::randn(sizes[1], torch::kCUDA);
     std::cout << "Tensor x:\n" << x << '\n';
-    auto y = torch::randn(sizes, torch::kCUDA);
-    std::cout << "Tensor y:\n" << y << '\n';
-    auto expected_result = torch::clamp_min(x + y, 0.0);
-
-    auto result = pointwise_add_relu_fusion_512(x, y);
-
-    std::cout << "Actual:\n" << result << '\n';
+    std::cout << "Tensor y:\n" << bias << '\n';
+    auto expected_result = torch::clamp_min(x + bias, 0.0);
     std::cout << "Expected:\n" << expected_result << '\n';
-
+    auto result = add_relu_fusion(x, bias);
+    std::cout << "Result:\n" << result << '\n';
+    std::cout << "All Match: " << (torch::allclose(expected_result, result) ? "true" : "false") << '\n';
     return 0;
 }
