@@ -52,8 +52,8 @@ def main():
                 parameters=model_parameters,
                 device=hyperparameters['device']).to(hyperparameters['device'])
 
-    # model = torch.compile(dlrm, fullgraph=True, mode="max-autotune")
-    model = dlrm
+    model = torch.compile(dlrm, fullgraph=True, mode="max-autotune")
+    # model = dlrm
     optimizer = torch.optim.Adam(model.parameters(), lr=hyperparameters['learning_rate'])
 
     # Binary Cross Entropy loss

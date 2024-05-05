@@ -75,7 +75,7 @@ class SparseArch(nn.Module):
         # use a regular python list
         # self.mapping = [metadata[f"SPARSE_{i}"]["tokenizer_values"] for i in range(self.num_sparse_features)]
         # use a tensor
-        self.mapping = [torch.tensor(metadata[f"SPARSE_{i}"]["tokenizer_values"]) for i in range(self.num_sparse_features)]
+        # self.mapping = [torch.tensor(metadata[f"SPARSE_{i}"]["tokenizer_values"]) for i in range(self.num_sparse_features)]
         # use tensor on device
         self.mapping = [torch.tensor(metadata[f"SPARSE_{i}"]["tokenizer_values"], device=device) for i in
                         range(self.num_sparse_features)]
@@ -83,10 +83,12 @@ class SparseArch(nn.Module):
 
     @staticmethod
     def index_hash(tensor: torch.Tensor, tokenizer_values: List[int]):
-        tensor = tensor.reshape(-1, 1)
-        tokenizers = torch.tensor(tokenizer_values).reshape(1, -1)
-        if tensor.is_cuda:
-            tokenizers = tokenizers.cuda()
+        # tensor = tensor.reshape(-1, 1)
+        # tokenizers = torch.tensor(tokenizer_values).reshape(1, -1)
+        tensor = tensor.view(-1, 1)
+        tokenizers = torch.tensor(tokenizer_values).view(1, -1)
+        # if tensor.is_cuda:
+        #     tokenizers = tokenizers.cuda()
         matches = tensor == tokenizers
         indices = torch.argmax(matches.to(torch.int64), dim=1)
         return indices
@@ -110,10 +112,7 @@ class SparseArch(nn.Module):
     def _forward_bad_modulus_hash(self, inputs: torch.Tensor) -> List[torch.Tensor]:
         output_values = []
         for i in range(self.num_sparse_features):
-            if self.use_modulus_hash:
-                indices = self.modulus_hash(inputs[:, i], self._modulus_hash_sizes[i])
-            else:
-                indices = self.index_hash(inputs[:, i], self.mapping[i])
+            indices = self.modulus_hash(inputs[:, i], self._modulus_hash_sizes[i])
             sparse_out = self.sparse_layers[i](indices)
             output_values.append(sparse_out)
         return output_values
@@ -124,11 +123,11 @@ class SparseArch(nn.Module):
 
     def forward(self, inputs: torch.Tensor) -> List[torch.Tensor]:
         # slide 1:
-        return self._forward_index_hash(inputs)
+        # return self._forward_index_hash(inputs)
         # slide 2:
         # return self._forward_bad_modulus_hash(inputs)
         # slide 3:
-        # return self._forward_modulus_hash(inputs)
+        return self._forward_modulus_hash(inputs)
 
 
 class DenseSparseInteractionLayer(nn.Module):
@@ -266,10 +265,6 @@ def dry_run_with_data(file_path, metadata_path):
             "hidden_layer_sizes": [16],
             "output_size": 16
         },
-        sparse_mlp={
-            "hidden_layer_sizes": [16],
-            "output_size": 16
-        },
         prediction_hidden_sizes=[16],
         use_modulus_hash=True
 
@@ -288,7 +283,7 @@ def dry_run_with_data(file_path, metadata_path):
     logger.info("DLRM prediction size: {}".format(prediction.size()))
     logger.info("[COMPILED] Time taken for prediction: {}".format(time.time() - start))
 
-    torch.onnx.export(dlrm, (dense, sparse), 'dlrm.onnx')
+    torch.onnx.export(dlrm, (dense, sparse), './data/dlrm.onnx')
 
 
 if __name__ == "__main__":
