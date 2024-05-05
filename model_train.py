@@ -24,7 +24,8 @@ def trace_handler(prof: profile, results_dir: str):
 
 def main():
     # Load hyperparameters
-    model_params_filename = "model_hyperparameters_initial"
+    # model_params_filename = "model_hyperparameters_initial"
+    model_params_filename = "model_hyperparameters_main"
     with open(f'{model_params_filename}.json', 'r') as f:
         hyperparameters = json.load(f)
 
@@ -90,28 +91,18 @@ def main():
             torch.profiler.ProfilerActivity.CPU,
             torch.profiler.ProfilerActivity.CUDA,
         ],
-
-        # In this example with wait=1, warmup=1, active=2, repeat=1,
-        # profiler will skip the first step/iteration,
-        # start warming up on the second, record
-        # the third and the forth iterations,
-        # after which the trace will become available
-        # and on_trace_ready (when set) is called;
-        # the cycle repeats starting with the next step
-
         schedule=torch.profiler.schedule(
             wait=1,
             warmup=1,
             active=3,
             repeat=1),
         # on_trace_ready=partial(trace_handler,
-        #                        results_dir="/home/ksharma/dev/git/ml-projects/dlrm/profiler_logs"),
+        #                        results_dir="./profiler_logs"),
         on_trace_ready=torch.profiler.tensorboard_trace_handler(hyperparameters["tensorboard_dir"],
                                                                 worker_name=model_params_filename),
         record_shapes=True,
         profile_memory=True,
         with_stack=True
-        # used when outputting for tensorboard
     )
     prof.start()
 
