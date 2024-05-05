@@ -60,6 +60,6 @@
     "train": 128,
     "validation": 128
   },
-  "batches_per_epoch": 1000,
+  "batches_per_epoch": 10,
   "use_modulus_hash": true
 }
