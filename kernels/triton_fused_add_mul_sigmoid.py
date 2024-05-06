@@ -14,9 +14,11 @@ def fused_add_mul_sigmoid_kernel(x_ptr, bias_ptr, in_ptr, num_weights, xnumel, m
     tmp1 = tl.load(bias_ptr + bias_index, mask, eviction_policy='evict_last')
     tmp3 = tl.load(in_ptr + index, mask)
     sigmoid_input = multiplier * tmp3 + tmp0 + tmp1
-    # ma_result = tl.sigmoid(sigmoid_input)
+    ma_result = tl.sigmoid(sigmoid_input)
+    # option 2 - calculate sigmoid using exp
     # ma_result = 1.0 / (1.0 + tl.exp(-sigmoid_input))
-    ma_result = 1.0 / (1.0 + tl.abs(sigmoid_input))
+    # option 3: fast sigmoid - inaccurate but faster
+    # ma_result = 1.0 / (1.0 + tl.abs(sigmoid_input))
     tl.store(x_ptr + index, ma_result, mask)
 
 def fused_add_mul_sigmoid_torch(in_out_tensor: torch.Tensor, bias: torch.Tensor, in_tensor: torch.Tensor) -> torch.Tensor:
@@ -35,9 +37,9 @@ def get_inputs(batch_size: int = 8, weight_size: int = 8, add_manual_size: bool 
     if add_manual_size:
         torch.manual_seed(0)
     dense_size = (batch_size, weight_size)
-    in_out_tensor = torch.randn(dense_size, device='cuda', dtype=torch.float64)
-    in_tensor = torch.randn(dense_size, device='cuda', dtype=torch.float64)
-    bias = torch.randn((1, weight_size), device='cuda', dtype=torch.float64)
+    in_out_tensor = torch.randn(dense_size, device='cuda', dtype=torch.float32)
+    in_tensor = torch.randn(dense_size, device='cuda', dtype=torch.float32)
+    bias = torch.randn((1, weight_size), device='cuda', dtype=torch.float32)
     return in_out_tensor, in_tensor, bias
 
 
@@ -73,6 +75,6 @@ def benchmark(batch_size, weight_size, provider):
     gbps = lambda ms: 12 * (batch_size * weight_size) / ms * 1e-6
     return gbps(ms), gbps(max_ms), gbps(min_ms)
 
+
 if __name__ == "__main__":
     benchmark.run(print_data=True, show_plots=False)
-

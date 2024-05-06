@@ -23,5 +23,8 @@ check_language(CUDA)
 enable_language(CUDA)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
-add_executable(pointwise_add_relu_fused ${cpu_source_files} ${gpu_source_files})
-target_link_libraries(pointwise_add_relu_fused "${TORCH_LIBRARIES}")
+add_executable(dlrm_kernels_test "${CMAKE_SOURCE_DIR}/src/dlrm_kernels_main.cc" ${gpu_source_files})
+target_link_libraries(dlrm_kernels_test "${TORCH_LIBRARIES}")
+
+add_executable(fused_kernels_lora_test "${CMAKE_SOURCE_DIR}/src/fused_kernels_lora_main.cc" ${gpu_source_files})
+target_link_libraries(fused_kernels_lora_test "${TORCH_LIBRARIES}")

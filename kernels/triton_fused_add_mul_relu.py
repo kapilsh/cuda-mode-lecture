@@ -64,9 +64,9 @@ def get_inputs(batch_size: int = 8, weight_size: int = 8, add_manual_size: bool 
     if add_manual_size:
         torch.manual_seed(0)
     dense_size = (batch_size, weight_size)
-    in_out_tensor = torch.randn(dense_size, device='cuda', dtype=torch.float64)
-    in_tensor = torch.randn(dense_size, device='cuda', dtype=torch.float64)
-    bias = torch.randn((1, weight_size), device='cuda', dtype=torch.float64)
+    in_out_tensor = torch.randn(dense_size, device='cuda', dtype=torch.float32)
+    in_tensor = torch.randn(dense_size, device='cuda', dtype=torch.float32)
+    bias = torch.randn((1, weight_size), device='cuda', dtype=torch.float32)
     return in_out_tensor, in_tensor, bias
 
 @triton.testing.perf_report(
