@@ -1,1 +1,10 @@
 data/dlrm_criteo_model.pt
+/build/
+/.idea/
+/.ipynb_checkpoints/
+/__pycache__/
+/data/.ipynb_checkpoints/
+/kernels/.idea/
+/kernels/__pycache__/
+/kernels/cmake-build-debug/
+/perf_screenshots/.ipynb_checkpoints/
