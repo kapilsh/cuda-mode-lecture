@@ -23,6 +23,13 @@ def trace_handler(prof: profile, results_dir: str):
 
 
 def main():
+    # # The flag below controls whether to allow TF32 on matmul. This flag defaults to False
+    # # in PyTorch 1.12 and later.
+    # torch.backends.cuda.matmul.allow_tf32 = True
+    #
+    # # The flag below controls whether to allow TF32 on cuDNN. This flag defaults to True.
+    # torch.backends.cudnn.allow_tf32 = True
+
     # Load hyperparameters
     # model_params_filename = "model_hyperparameters_initial"
     model_params_filename = "model_hyperparameters_main"
@@ -121,14 +128,10 @@ def main():
             dense = dense.to(hyperparameters['device'])
             sparse = sparse.to(hyperparameters['device'])
 
-            # Forward pass
-            outputs = model(dense, sparse)
-            loss = criterion(outputs, labels)
-
-            # logger.info("--- Loss: {}".format(loss.item()))
-
             # Backward pass and optimization
             optimizer.zero_grad()
+            outputs = model(dense, sparse)
+            loss = criterion(outputs, labels)
             # logger.info("Zeroed gradients")
             loss.backward()
             # logger.info("Backward pass done")
