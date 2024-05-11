@@ -95,4 +95,10 @@ def benchmark(batch_size, weight_size, provider):
 
 
 if __name__ == "__main__":
-    benchmark.run(print_data=True, show_plots=False)
+    # # The flag below controls whether to allow TF32 on matmul. This flag defaults to False
+    # # in PyTorch 1.12 and later.
+    torch.backends.cuda.matmul.allow_tf32 = True
+    #
+    # # The flag below controls whether to allow TF32 on cuDNN. This flag defaults to True.
+    torch.backends.cudnn.allow_tf32 = True
+    benchmark.run(print_data=True, show_plots=True)
