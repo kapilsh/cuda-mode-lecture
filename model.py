@@ -14,6 +14,7 @@ from criteo_dataset import CriteoParquetDataset
 
 torch._dynamo.reset()
 
+
 class MLP(nn.Module):
     def __init__(self, input_size: int, hidden_sizes: List[int], output_size: int):
         super(MLP, self).__init__()
@@ -53,7 +54,7 @@ class SparseFeatureLayer(nn.Module):
         self.embedding = nn.Embedding(cardinality, embedding_size)
 
     def forward(self, inputs: torch.Tensor) -> torch.Tensor:
-        # Input : B X 1 # Output : B X O
+        # Input : B X 1 # Output : B X E
         embeddings = self.embedding(inputs)
         return embeddings
 
@@ -68,7 +69,8 @@ class SparseArch(nn.Module):
         self._modulus_hash_sizes = [m["cardinality"] for m in metadata.values()]
         self.sparse_layers = nn.ModuleList([
             SparseFeatureLayer(cardinality=self._modulus_hash_sizes[i],
-                               embedding_size=embedding_sizes[feature_name]) for i, feature_name in enumerate(metadata.keys())
+                               embedding_size=embedding_sizes[feature_name]) for i, feature_name in
+            enumerate(metadata.keys())
         ])
 
         # Create mapping for each sparse feature
@@ -82,11 +84,11 @@ class SparseArch(nn.Module):
         self.cardinality_tensor = torch.tensor(self._modulus_hash_sizes).to(device)
 
     @staticmethod
-    def index_hash(tensor: torch.Tensor, tokenizer_values: List[int]):
+    def index_hash(tensor: torch.Tensor, tokenizer_values: Union[List[int], torch.Tensor]):
         # tensor = tensor.reshape(-1, 1)
         # tokenizers = torch.tensor(tokenizer_values).reshape(1, -1)
         tensor = tensor.view(-1, 1)
-        tokenizers = torch.tensor(tokenizer_values).view(1, -1)
+        tokenizers = tokenizer_values.view(1, -1)
         # if tensor.is_cuda:
         #     tokenizers = tokenizers.cuda()
         matches = tensor == tokenizers
@@ -94,11 +96,7 @@ class SparseArch(nn.Module):
         return indices
 
     @staticmethod
-    def modulus_hash(tensor: torch.Tensor, cardinality: int):
-        return (tensor + 1) % cardinality
-
-    @staticmethod
-    def modulus_hash_opt(tensor: torch.Tensor, cardinality: torch.Tensor):
+    def modulus_hash(tensor: torch.Tensor, cardinality: torch.Tensor):
         return (tensor + 1) % cardinality
 
     def _forward_index_hash(self, inputs: torch.Tensor) -> List[torch.Tensor]:
@@ -109,32 +107,33 @@ class SparseArch(nn.Module):
             output_values.append(sparse_out)
         return output_values
 
-    def _forward_bad_modulus_hash(self, inputs: torch.Tensor) -> List[torch.Tensor]:
-        output_values = []
-        for i in range(self.num_sparse_features):
-            indices = self.modulus_hash(inputs[:, i], self._modulus_hash_sizes[i])
-            sparse_out = self.sparse_layers[i](indices)
-            output_values.append(sparse_out)
-        return output_values
-
     def _forward_modulus_hash(self, inputs: torch.Tensor) -> List[torch.Tensor]:
-        sparse_hashed = self.modulus_hash_opt(inputs, self.cardinality_tensor)
+        sparse_hashed = self.modulus_hash(inputs, self.cardinality_tensor)
         return [sparse_layer(sparse_hashed[:, i]) for i, sparse_layer in enumerate(self.sparse_layers)]
 
     def forward(self, inputs: torch.Tensor) -> List[torch.Tensor]:
         # slide 1:
         # return self._forward_index_hash(inputs)
         # slide 2:
-        # return self._forward_bad_modulus_hash(inputs)
-        # slide 3:
         return self._forward_modulus_hash(inputs)
 
 
 class DenseSparseInteractionLayer(nn.Module):
+    SUPPORTED_INTERACTION_TYPES = ["dot", "cat"]
+    def __init__(self, interaction_type: str = "dot"):
+        super(DenseSparseInteractionLayer, self).__init__()
+        if interaction_type not in self.SUPPORTED_INTERACTION_TYPES:
+            raise ValueError(f"Interaction type {interaction_type} not supported. "
+                             f"Supported types are {self.SUPPORTED_INTERACTION_TYPES}")
+        self.interaction_type = interaction_type
+
     def forward(self, dense_out: torch.Tensor,
                 sparse_out: List[torch.Tensor]) -> Tensor:
         concat = torch.cat([dense_out] + sparse_out, dim=-1).unsqueeze(2)
-        out = torch.bmm(concat, torch.transpose(concat, 1, 2))
+        if self.interaction_type == "dot":
+            out = torch.bmm(concat, torch.transpose(concat, 1, 2))
+        else:
+            out = concat
         flattened = torch.flatten(out, 1)
         return flattened
 
@@ -206,7 +205,8 @@ def read_metadata(metadata_path):
 @click.option('--file_path',
               type=click.Path(exists=True), help='Path to the parquet file', default="data/sample_criteo_data.parquet")
 @click.option('--metadata_path',
-              type=click.Path(exists=True), help='Path to the metadata file', default="data/sample_criteo_metadata.json")
+              type=click.Path(exists=True), help='Path to the metadata file',
+              default="data/sample_criteo_metadata.json")
 def dry_run_with_data(file_path, metadata_path):
     """
     Process the file specified by --file_path and use metadata from --metadata_path.
