@@ -37,12 +37,12 @@
   },
   "dense_mlp": {"hidden_layer_sizes":  [32], "output_size": 16},
   "prediction_hidden_sizes": [32],
-  "num_epochs": 10,
+  "num_epochs": 1,
   "learning_rate": 0.1,
   "device": "cuda",
   "batch_size": {
     "train": 64,
-    "validation": 164
+    "validation": 64
   },
   "batches_per_epoch": 10,
   "use_modulus_hash": true

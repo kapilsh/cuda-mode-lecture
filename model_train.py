@@ -22,7 +22,12 @@ def trace_handler(prof: profile, results_dir: str):
     prof.export_chrome_trace(f"/{results_dir}/test_trace_" + str(uuid.uuid4()) + ".json")
 
 
-def main():
+import click
+
+@click.command()
+@click.option('--config', default="model_hyperparameters_small.json", help='Model parameters filename')
+@click.option('--use_torch_compile', is_flag=True, default=False, help='Use torch.compile if set')
+def main(config: str, use_torch_compile: bool):
     # # The flag below controls whether to allow TF32 on matmul. This flag defaults to False
     # # in PyTorch 1.12 and later.
     # torch.backends.cuda.matmul.allow_tf32 = True
@@ -31,10 +36,10 @@ def main():
     # torch.backends.cudnn.allow_tf32 = True
 
     # Load hyperparameters
-    # model_params_filename = "model_hyperparameters_initial"
-    model_params_filename = "model_hyperparameters_main"
-    with open(f'{model_params_filename}.json', 'r') as f:
+    with open(config, 'r') as f:
         hyperparameters = json.load(f)
+
+    modifier = config.replace(".", "").replace("/", "").replace("json", "")
 
     timing_context = {}
 
@@ -60,8 +65,10 @@ def main():
                 parameters=model_parameters,
                 device=hyperparameters['device']).to(hyperparameters['device'])
 
-    model = torch.compile(dlrm, fullgraph=True, mode="max-autotune")
-    # model = dlrm
+    if use_torch_compile:
+        model = torch.compile(dlrm, fullgraph=True, mode="max-autotune")
+    else:
+        model = dlrm
     optimizer = torch.optim.Adam(model.parameters(), lr=hyperparameters['learning_rate'])
 
     # Binary Cross Entropy loss
@@ -91,7 +98,7 @@ def main():
 
     writer = SummaryWriter(log_dir=hyperparameters["tensorboard_dir"],
                            flush_secs=30,
-                           filename_suffix=model_params_filename)
+                           filename_suffix=modifier)
 
     prof = torch.profiler.profile(
         activities=[
@@ -106,7 +113,7 @@ def main():
         # on_trace_ready=partial(trace_handler,
         #                        results_dir="./profiler_logs"),
         on_trace_ready=torch.profiler.tensorboard_trace_handler(hyperparameters["tensorboard_dir"],
-                                                                worker_name=model_params_filename),
+                                                                worker_name=modifier),
         record_shapes=True,
         profile_memory=True,
         with_stack=True
