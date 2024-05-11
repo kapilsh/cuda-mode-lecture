@@ -75,7 +75,8 @@ class SparseArch(nn.Module):
 
         # Create mapping for each sparse feature
         # Slide 1: use a regular python list
-        # self.mapping = [metadata[f"SPARSE_{i}"]["tokenizer_values"] for i in range(self.num_sparse_features)]
+        # self.mapping = [torch.tensor(metadata[f"SPARSE_{i}"]["tokenizer_values"]) for i in
+        #                 range(self.num_sparse_features)]
         # Slide 2: use tensor on device
         self.mapping = [torch.tensor(metadata[f"SPARSE_{i}"]["tokenizer_values"], device=device) for i in
                         range(self.num_sparse_features)]
@@ -110,14 +111,15 @@ class SparseArch(nn.Module):
         return [sparse_layer(sparse_hashed[:, i]) for i, sparse_layer in enumerate(self.sparse_layers)]
 
     def forward(self, inputs: torch.Tensor) -> List[torch.Tensor]:
-        # # slide 1:
+        # slide 1:
         # return self._forward_index_hash(inputs)
-        # slide 2:
+        # # slide 2:
         return self._forward_modulus_hash(inputs)
 
 
 class DenseSparseInteractionLayer(nn.Module):
     SUPPORTED_INTERACTION_TYPES = ["dot", "cat"]
+
     def __init__(self, interaction_type: str = "dot"):
         super(DenseSparseInteractionLayer, self).__init__()
         if interaction_type not in self.SUPPORTED_INTERACTION_TYPES:

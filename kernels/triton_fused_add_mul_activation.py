@@ -48,8 +48,8 @@ def add_mul_activation_torch(in_out_tensor: torch.Tensor, bias: torch.Tensor, in
     return torch.sigmoid(in_out_tensor + 0.5 * in_tensor + bias)
 
 
-def get_inputs(batch_size: int = 8, weight_size: int = 8, add_manual_size: bool = False):
-    if add_manual_size:
+def get_inputs(batch_size: int = 8, weight_size: int = 8, add_manual_seed: bool = False):
+    if add_manual_seed:
         torch.manual_seed(0)
     dense_size = (batch_size, weight_size)
     in_out_tensor = torch.randn(dense_size, device='cuda', dtype=torch.float32)
@@ -76,7 +76,7 @@ add_mul_activation_torch_scripted = torch.jit.script(add_mul_activation_torch, e
         args={},  # Values for function arguments not in `x_names` and `y_name`.
     ))
 def benchmark(batch_size, weight_size, provider):
-    in_out_tensor, in_tensor, bias = get_inputs(batch_size=batch_size, weight_size=weight_size, add_manual_size=True)
+    in_out_tensor, in_tensor, bias = get_inputs(batch_size=batch_size, weight_size=weight_size, add_manual_seed=True)
     quantiles = [0.5, 0.2, 0.8]
     if provider == "triton":
         ms, min_ms, max_ms = triton.testing.do_bench(
