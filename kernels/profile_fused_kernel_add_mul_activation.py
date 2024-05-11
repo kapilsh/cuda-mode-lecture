@@ -5,7 +5,7 @@ from triton_fused_add_mul_activation import get_inputs, fused_add_mul_activation
     add_mul_activation_torch_scripted
 
 if __name__ == '__main__':
-    sample_inputs = [get_inputs(add_manual_seed=False) for _ in range(10)]
+    sample_inputs = [get_inputs(batch_size=65336, weight_size=512, add_manual_seed=False) for _ in range(10)]
     BLOCK_SIZE = 1024
     prof = torch.profiler.profile(
         activities=[
