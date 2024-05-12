@@ -1,8 +1,8 @@
-# Fused Kernels - What started as exploring DLRM
+# Fused Kernels
 
 ## Abstract
 
-Abstract: With focus on performance to get the most out of hardware, fusing of kernels has been a popular technique. At times, researchers/practitioners will re-write their code in native cuda or cpu kernels to get optimal performance, but projects such as torch.compile aim to make this simpler. Talk will focus on generating fused kernels and how to leverage torch.compile to be able to do that. We will shift a bit from all LLM talk and look into recommendation algorithms. In the process, we will work on creating fused kernels (triton and cuda) with the help of `torch.compile`. 
+With focus on performance to get the most out of hardware, fusing of kernels has been a popular technique. At times, researchers/practitioners will re-write their code in native cuda or cpu kernels to get optimal performance, but projects such as torch.compile aim to make this simpler. Talk will focus on generating fused kernels and how to leverage torch.compile to be able to do that. We will shift a bit from all LLM talk and look into recommendation algorithms. In the process, we will work on creating fused kernels (triton and cuda) with the help of `torch.compile`. 
 
 
 ## About Me
@@ -40,6 +40,7 @@ If you want to get in touch with me:
 - LoRA Paper: https://arxiv.org/abs/2106.09685
 - LoRA from scratch: https://lightning.ai/lightning-ai/studios/code-lora-from-scratch
 - Netron: https://netron.app/
+- GPUs go brrr https://horace.io/brrr_intro.html
 
 
 ## DLRM (Deep Learning Recommendation Model)
@@ -110,11 +111,11 @@ logger.info("Dense size: {}".format(dense.size()))
 logger.info("Sparse size: {}".format(sparse.size()))
 ```
 
-    2024-05-10 22:19:35.724 | INFO     | __main__:<module>:1 - Reading the parquet file ./data/sample_criteo_data.parquet...
-    2024-05-10 22:19:35.727 | INFO     | __main__:<module>:2 - Reading the metadata file ./data/sample_criteo_metadata.json...
-    2024-05-10 22:19:37.797 | INFO     | __main__:<module>:7 - Labels size: torch.Size([2])
-    2024-05-10 22:19:37.798 | INFO     | __main__:<module>:8 - Dense size: torch.Size([2, 13])
-    2024-05-10 22:19:37.798 | INFO     | __main__:<module>:9 - Sparse size: torch.Size([2, 26])
+    2024-05-11 14:08:50.248 | INFO     | __main__:<module>:1 - Reading the parquet file ./data/sample_criteo_data.parquet...
+    2024-05-11 14:08:50.248 | INFO     | __main__:<module>:2 - Reading the metadata file ./data/sample_criteo_metadata.json...
+    2024-05-11 14:08:51.393 | INFO     | __main__:<module>:7 - Labels size: torch.Size([2])
+    2024-05-11 14:08:51.394 | INFO     | __main__:<module>:8 - Dense size: torch.Size([2, 13])
+    2024-05-11 14:08:51.394 | INFO     | __main__:<module>:9 - Sparse size: torch.Size([2, 26])
 
 
 
@@ -167,18 +168,18 @@ logger.info("Dense out size: {}".format(dense_out.size()))
 dense_out
 ```
 
-    2024-05-10 22:20:24.120 | INFO     | __main__:<module>:7 - Dense out size: torch.Size([2, 16])
+    2024-05-11 14:08:51.416 | INFO     | __main__:<module>:7 - Dense out size: torch.Size([2, 16])
 
 
 
 
 
-    tensor([[  11.9017,  -12.7477,   14.8915,   -6.4140,  -27.7980,  -18.9553,
-               12.5562,    9.0646,   -8.2397,    2.5173,  -12.5808,  -10.4214,
-               12.7185,  -38.8769,  -14.0267,  -12.3461],
-            [  41.2335,  -68.2487,   74.4415,    2.5677, -122.1564, -187.7509,
-               74.7475,   56.7434,   90.8585,   25.7938, -182.5733,  -56.0120,
-              129.2181, -334.3582, -115.2918, -240.1474]],
+    tensor([[  11.6451,    3.0189,  -48.5918,  -32.3807,  -55.1242,  -52.7222,
+               14.9740,    4.7447,  -41.9140,   33.3978,   18.6538,    2.1335,
+               25.8962,   18.2281,  -29.6636,   -3.0227],
+            [ 146.8453,   13.4556, -391.1624, -245.9999, -422.9316, -344.2513,
+              188.1155,   73.1228, -326.0069,  204.1690,  256.8700,   -5.2064,
+              201.7352,   31.4574, -243.0708,  -97.3927]],
            grad_fn=<AddmmBackward0>)
 
 
@@ -199,41 +200,41 @@ for v in sparse_out:
 sparse_out[0]
 ```
 
-    2024-05-10 06:48:44.278 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
-    2024-05-10 06:48:44.279 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
-    2024-05-10 06:48:44.279 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
-    2024-05-10 06:48:44.279 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
-    2024-05-10 06:48:44.280 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
-    2024-05-10 06:48:44.280 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
-    2024-05-10 06:48:44.281 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
-    2024-05-10 06:48:44.281 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
-    2024-05-10 06:48:44.281 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
-    2024-05-10 06:48:44.282 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
-    2024-05-10 06:48:44.282 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
-    2024-05-10 06:48:44.283 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
-    2024-05-10 06:48:44.283 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
-    2024-05-10 06:48:44.283 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
-    2024-05-10 06:48:44.284 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
-    2024-05-10 06:48:44.285 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
-    2024-05-10 06:48:44.286 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
-    2024-05-10 06:48:44.286 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
-    2024-05-10 06:48:44.286 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
-    2024-05-10 06:48:44.287 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
-    2024-05-10 06:48:44.288 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
-    2024-05-10 06:48:44.288 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
-    2024-05-10 06:48:44.288 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
-    2024-05-10 06:48:44.289 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
-    2024-05-10 06:48:44.289 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
-    2024-05-10 06:48:44.289 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
+    2024-05-11 14:08:53.235 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
+    2024-05-11 14:08:53.236 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
+    2024-05-11 14:08:53.236 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
+    2024-05-11 14:08:53.237 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
+    2024-05-11 14:08:53.237 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
+    2024-05-11 14:08:53.237 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
+    2024-05-11 14:08:53.238 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
+    2024-05-11 14:08:53.238 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
+    2024-05-11 14:08:53.239 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
+    2024-05-11 14:08:53.240 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
+    2024-05-11 14:08:53.240 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
+    2024-05-11 14:08:53.240 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
+    2024-05-11 14:08:53.241 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
+    2024-05-11 14:08:53.241 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
+    2024-05-11 14:08:53.242 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
+    2024-05-11 14:08:53.242 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
+    2024-05-11 14:08:53.242 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
+    2024-05-11 14:08:53.243 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
+    2024-05-11 14:08:53.243 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
+    2024-05-11 14:08:53.243 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
+    2024-05-11 14:08:53.244 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
+    2024-05-11 14:08:53.244 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
+    2024-05-11 14:08:53.245 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
+    2024-05-11 14:08:53.245 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
+    2024-05-11 14:08:53.245 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
+    2024-05-11 14:08:53.246 | INFO     | __main__:<module>:11 - Sparse out size: torch.Size([2, 16])
 
 
 
 
 
-    tensor([[-0.8910,  0.7350,  2.5177, -0.1680, -1.3943,  0.8508,  0.1261, -0.5677,
-             -1.2212,  0.4048, -0.1955,  0.7081,  0.6327,  0.1076,  1.0756,  1.6811],
-            [ 0.2531, -1.3013, -2.1834,  0.6642, -0.3430, -0.0987, -1.8949,  0.9163,
-             -0.1668, -1.3025,  0.8789,  0.2526,  1.6896, -1.0105,  0.3257,  0.7609]],
+    tensor([[-2.0452,  0.7938, -0.0607, -1.4266,  0.2772,  0.9912, -0.3738,  0.4863,
+              0.6430,  0.3728, -0.6082, -1.2793, -0.7943,  0.5326,  0.8906,  0.1647],
+            [-0.5692,  0.4912,  1.3526, -1.4923, -1.5862, -0.2653, -0.0764, -0.3848,
+              0.1008,  1.2955, -1.6488,  1.4038, -1.6606, -2.0017, -0.7786,  0.1461]],
            grad_fn=<EmbeddingBackward0>)
 
 
@@ -246,16 +247,16 @@ logger.info("Dense sparse interaction out size: {}".format(ds_out.size()))
 ds_out
 ```
 
-    2024-05-10 22:25:04.230 | INFO     | __main__:<module>:3 - Dense sparse interaction out size: torch.Size([2, 186624])
+    2024-05-11 14:08:53.253 | INFO     | __main__:<module>:3 - Dense sparse interaction out size: torch.Size([2, 186624])
 
 
 
 
 
-    tensor([[ 1.4165e+02, -1.5172e+02,  1.7723e+02,  ...,  9.1448e-03,
-             -1.1977e-02,  3.6144e-04],
-            [ 1.7002e+03, -2.8141e+03,  3.0695e+03,  ...,  1.9077e+00,
-             -9.0247e-01,  3.1846e-01]], grad_fn=<ViewBackward0>)
+    tensor([[ 1.3561e+02,  3.5155e+01, -5.6586e+02,  ...,  7.5871e-01,
+             -1.5478e-01,  5.0601e-01],
+            [ 2.1564e+04,  1.9759e+03, -5.7440e+04,  ..., -7.6579e-02,
+              2.4089e-01,  5.5938e-01]], grad_fn=<ViewBackward0>)
 
 
 
@@ -269,12 +270,12 @@ logger.info("Prediction out size: {}".format(pred_out.size()))
 logger.info("Prediction out value: {}".format(pred_out))
 ```
 
-    2024-05-10 22:26:10.920 | INFO     | __main__:<module>:5 - Prediction out size: torch.Size([2, 1])
-    2024-05-10 22:26:10.921 | INFO     | __main__:<module>:6 - Prediction out value: tensor([[0.7167],
+    2024-05-11 14:08:53.284 | INFO     | __main__:<module>:5 - Prediction out size: torch.Size([2, 1])
+    2024-05-11 14:08:53.285 | INFO     | __main__:<module>:6 - Prediction out value: tensor([[0.2761],
             [1.0000]], grad_fn=<SigmoidBackward0>)
 
 
-# ONNX Model Graph
+# Model Graph
 
 ## Model Graph
 
@@ -626,7 +627,7 @@ wget https://download.pytorch.org/libtorch/cu121/libtorch-cxx11-abi-shared-with-
     -- Configuring done
     -- Generating done
     -- Build files have been written to: /home/ksharma/dev/git/cuda-mode-lecture/kernels/cmake-build-debug
-    [8/8] Linking CXX executable fused_kernels_lora_test[Kkernels_lora_on_mlp.cu.o[K
+    ninja: no work to do.
 
 
 
@@ -819,7 +820,12 @@ torch.testing.assert_close(X, eager_result, rtol=1e-4, atol=1e-4)
 
 Source: https://arxiv.org/pdf/2106.09685
 
+- Simple low rank reparametization of weight matrices
+- Singular value decomposition
+
 ## Fused Kernels
+
+> `TORCH_LOGS=output_code CUDA_LAUNCH_BLOCKING=1 python lora_on_simple_mlp.py `
 
 
 ```python
@@ -832,7 +838,7 @@ from kernels.triton_fused_add_mul_relu import *
 
 ```python
 print(triton.__version__)
-in_out_tensor, in_tensor, bias = get_inputs(add_manual_size=True)
+in_out_tensor, in_tensor, bias = get_inputs(add_manual_seed=True)
 expected_output = torch.maximum(in_out_tensor + 0.5 * in_tensor + bias, torch.tensor(0., device='cuda'))
 print("Input", in_out_tensor)
 print("Expected Output", expected_output)
@@ -899,7 +905,7 @@ torch.testing.assert_close(in_out_tensor, expected_output, rtol=1e-4, atol=1e-4)
 
 
 ```python
-in_out_tensor, in_tensor, bias = get_inputs(add_manual_size=True)
+in_out_tensor, in_tensor, bias = get_inputs(add_manual_seed=True)
 num_weights = bias.numel()
 fused_add_mul_relu_cleaner[grid](in_out_tensor, 
                                  bias, 
@@ -1085,13 +1091,13 @@ cuda_extension = load_inline(
 
 
 ```python
-in_out_tensor, in_tensor, bias = get_inputs(add_manual_size=True)
+in_out_tensor, in_tensor, bias = get_inputs(add_manual_seed=True)
 num_weights = bias.numel()
 result = cuda_extension.fused_add_mul_relu(in_out_tensor, bias, in_tensor, 0.5)
 torch.testing.assert_close(result, expected_output, rtol=1e-4, atol=1e-4)
 ```
 
-## Rest of the graph
+## Combine the kernels
 
 ### Fused add mul sigmoid/relu/etc
 
@@ -1119,6 +1125,8 @@ def fused_add_mul_activation_kernel(x_ptr, bias_ptr, in_ptr,
 
     tl.store(x_ptr + index, ma_result, mask)
 ```
+
+### Let's check the perf of this kernel wrt torch.script, eager torch
 
 ### Can we write the whole thing as triton/cuda kernel? Let's look MLP without LoRA layers
 
